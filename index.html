@@ -20,6 +20,13 @@
     --card:#111a2e;
     --card2:#0f1830;
     --border:#1f2a44;
+    /* official AMOS navy — logo, brand and interactive accent */
+    --brand:#1b2170;
+    --accent:#3d51cc;
+    --accent-dark:#2f40a8;
+    --accent-soft:#8f9dff;
+    --accent-tint:#161d3f;
+    /* amber stays reserved for the "in progress" status only */
     --orange:#f5a623;
     --orange-dark:#d9891a;
     --green:#22c55e;
@@ -51,7 +58,7 @@
   }
   .logo svg{ display:none; }
   .badge{
-    background:#1a2440; color:var(--orange); font-size:11px; font-weight:700;
+    background:#1a2440; color:var(--accent-soft); font-size:11px; font-weight:700;
     padding:2px 8px; border-radius:5px; letter-spacing:.5px;
   }
   h1{font-size:17px; margin:2px 0 2px;}
@@ -63,8 +70,8 @@
     display:flex; align-items:center; gap:6px; transition:.15s;
   }
   .btn:hover{background:#1a2748;}
-  .btn.primary{background:var(--orange); color:#1a1300; border-color:var(--orange); font-weight:700;}
-  .btn.primary:hover{background:var(--orange-dark);}
+  .btn.primary{background:var(--accent); color:#ffffff; border-color:var(--accent); font-weight:700;}
+  .btn.primary:hover{background:var(--accent-dark); border-color:var(--accent-dark);}
 
   .lang-toggle{display:flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; flex:none;}
   .lang-seg{
@@ -72,7 +79,7 @@
     font-weight:700; cursor:pointer; transition:.15s; font-family:inherit;
   }
   .lang-seg:hover{background:#1a2748;}
-  .lang-seg.active{background:var(--orange); color:#1a1300;}
+  .lang-seg.active{background:var(--accent); color:#ffffff;}
 
   .wrap{max-width:1300px; margin:0 auto; padding:20px 24px 60px;}
 
@@ -90,7 +97,7 @@
     width:100%; background:#0c1426; border:1px solid var(--border); color:var(--text);
     padding:10px 12px; border-radius:8px; font-size:13.5px; font-family:inherit;
   }
-  .field input:focus, .field select:focus{outline:none; border-color:var(--orange);}
+  .field input:focus, .field select:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(61,81,204,.25);}
   .upload-row{
     display:flex; align-items:center; gap:14px; flex-wrap:wrap;
     border:1.5px dashed var(--border); border-radius:10px; padding:16px; background:#0c1426;
@@ -126,7 +133,7 @@
   }
   .info-item:last-child{border-bottom:none;}
   .info-item .ic{
-    width:38px; height:38px; border-radius:9px; background:#2a1c08; color:var(--orange);
+    width:38px; height:38px; border-radius:9px; background:var(--accent-tint); color:var(--accent-soft);
     display:flex; align-items:center; justify-content:center; font-size:17px; flex:none;
   }
   .info-item .lbl{font-size:11.5px; color:var(--sub); margin-bottom:2px;}
@@ -154,7 +161,7 @@
   .summary-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px;}
   .summary-card h3{margin:0 0 12px; font-size:14.5px;}
   .summary-card p{font-size:13px; line-height:1.9; color:#c9d2e3; margin:0 0 12px;}
-  .kw-chip{display:inline-block; background:#0c1426; border:1px solid var(--border); color:var(--orange);
+  .kw-chip{display:inline-block; background:#0c1426; border:1px solid var(--accent-tint); color:var(--accent-soft);
     padding:5px 11px; border-radius:20px; font-size:12px; margin:0 6px 8px 0;}
 
   .ledger-card{background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px;}
@@ -169,7 +176,7 @@
     background:#0c1426; border:1px solid var(--border); color:var(--sub); padding:7px 13px;
     border-radius:8px; font-size:12.5px; cursor:pointer; display:flex; gap:6px; align-items:center;
   }
-  .tab.active{background:var(--orange); color:#1a1300; border-color:var(--orange); font-weight:700;}
+  .tab.active{background:var(--accent); color:#ffffff; border-color:var(--accent); font-weight:700;}
   .tab[data-key="OK"]{border-color:#1e5c3a; color:var(--green);}
   .tab[data-key="OK"].active{background:var(--green); color:#04170c; border-color:var(--green);}
   .tab[data-key="INCOMPLETE"]{border-color:#7a4a12; color:var(--orange);}
@@ -214,11 +221,16 @@
 
     /* print-only report header repeated context */
     header.topbar{
-      background:#fff !important; border-bottom:2px solid #111827; padding:0 0 10px; margin-bottom:14px;
+      background:#fff !important; border-bottom:2px solid #1b2170; padding:0 0 10px; margin-bottom:14px;
       break-after:avoid; page-break-after:avoid;
     }
-    .brand .logo{ background:#f5a623 !important; color:#111827 !important; box-shadow:none; }
-    .badge{ background:#f0f0f0 !important; color:#8a5a10 !important; }
+    /* logo on paper: navy AMOS mark, no coloured chip behind it */
+    .brand .logo{
+      background-color:transparent !important;
+      background-size:100% auto !important;
+      box-shadow:none !important; border:none !important;
+    }
+    .badge{ background:#eef0f8 !important; color:#1b2170 !important; }
     h1, h3, .lbl, .val, .num, .num small, .sub, td, th, #summaryText, p, .legend-row, .dept-pill, .kw-chip{
       color:#111827 !important;
     }

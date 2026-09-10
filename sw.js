@@ -2,7 +2,7 @@
    AMOS Report Generator — Service Worker
    غيّري رقم الإصدار CACHE_VERSION عند كل تحديث للملفات
    ========================================================= */
-const CACHE_VERSION = 'amos-report-v1.1.0';
+const CACHE_VERSION = 'amos-report-v1.2.0';
 const CDN_XLSX = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
 
 const APP_SHELL = [
