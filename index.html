@@ -210,79 +210,183 @@
     .actions .lang-seg{flex:1;}
   }
 
+  /* ============================================================
+     PRINTED DOCUMENT (A4) — official AMOS report layout
+     ============================================================ */
+  .print-only{ display:none !important; }
+
   @media print{
-    @page{ size:A4; margin:12mm 10mm; }
+    @page{ size:A4; margin:16mm 14mm; }
 
     *{ -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important; color-adjust:exact !important; }
 
-    html, body{ background:#ffffff !important; color:#111827 !important; }
-    #loginScreen{ display:none !important; }
-    header .actions, .setup-card, .search-box, #exportCsvBtn, #exportHtmlBtn, .tabs, .ledger-head #exportCsvBtn{ display:none !important; }
-
-    /* print-only report header repeated context */
-    header.topbar{
-      background:#fff !important; border-bottom:2px solid #1b2170; padding:0 0 10px; margin-bottom:14px;
-      break-after:avoid; page-break-after:avoid;
+    html, body{
+      background:#ffffff !important; color:#111827 !important;
+      font-family:'Segoe UI', Tahoma, Arial, sans-serif; font-size:10.5pt;
     }
-    /* logo on paper: navy AMOS mark, no coloured chip behind it */
-    .brand .logo{
-      background-color:transparent !important;
-      background-size:100% auto !important;
+
+    /* everything that belongs to the on-screen app only */
+    #loginScreen, header.topbar, .setup-card, .infobar, .tabs, .search-box,
+    #installBtn, .pwa-toast, .pwa-modal, .export-lang-toggle{ display:none !important; }
+
+    .print-only{ display:block !important; }
+    .wrap{ max-width:100%; padding:0; margin:0; }
+    #reportSection{ counter-reset:sec; }
+
+    /* ---------- document letterhead ---------- */
+    #printHead{ margin:0 0 14px; break-after:avoid; page-break-after:avoid; }
+    #printHead .ph-top{
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+      border-bottom:2.5px solid #1b2170; padding-bottom:9px;
+    }
+    #printHead .ph-brand{ display:flex; align-items:center; gap:12px; }
+    #printHead .ph-logo{
+      width:54px; height:54px; flex:none; border-radius:0;
+      background-color:transparent !important; background-size:100% auto !important;
       box-shadow:none !important; border:none !important;
     }
-    .badge{ background:#eef0f8 !important; color:#1b2170 !important; }
-    h1, h3, .lbl, .val, .num, .num small, .sub, td, th, #summaryText, p, .legend-row, .dept-pill, .kw-chip{
-      color:#111827 !important;
+    .ph-org{ font-size:12.5pt; font-weight:800; color:#1b2170 !important; letter-spacing:.6px; line-height:1.2; }
+    .ph-org2{ font-size:9pt; color:#5b6472 !important; margin-top:3px; }
+    .ph-docid{
+      text-align:end; border:1px solid #c9cfe4; border-radius:6px;
+      padding:6px 11px; background:#f4f6fb !important; flex:none;
     }
-    header p, .setup-sub, .lbl, .sub{ color:#4b5563 !important; }
+    .ph-doclbl{ font-size:7.5pt; letter-spacing:.5px; color:#5b6472 !important; }
+    .ph-docval{ font-size:10pt; font-weight:800; color:#1b2170 !important; direction:ltr; margin-top:2px; }
+    .ph-title{ font-size:15pt; font-weight:800; color:#111827 !important; margin:12px 0 3px; line-height:1.35; }
+    .ph-sub{ font-size:9.5pt; color:#5b6472 !important; margin:0 0 11px; }
+    .ph-meta{ display:flex; flex-wrap:wrap; border:1px solid #d7dbe7; border-radius:8px; overflow:hidden; }
+    .ph-meta > div{
+      flex:1 1 30%; min-width:110px; padding:7px 11px;
+      border-inline-end:1px solid #e6e9f2; border-bottom:1px solid #e6e9f2;
+    }
+    .ph-meta > div:nth-child(3n){ border-inline-end:none; }
+    .ph-meta > div:nth-child(n+4){ border-bottom:none; }
+    .ph-meta span{ display:block; font-size:7.5pt; letter-spacing:.3px; color:#5b6472 !important; margin-bottom:3px; }
+    .ph-meta b{ font-size:10pt; font-weight:700; color:#111827 !important; }
 
-    .wrap{ max-width:100%; padding:0; margin:0; }
+    /* ---------- numbered section headings ---------- */
+    .sec-title, .summary-card h3, .ledger-head h3{
+      font-size:11.5pt !important; font-weight:800; color:#1b2170 !important;
+      margin:0 0 9px !important; display:flex !important; align-items:center; gap:8px;
+    }
+    .sec-title{ margin-top:15px !important; }
+    .infobar + .sec-title{ margin-top:2px !important; }
+    .sec-title::before, .summary-card h3::before, .ledger-head h3::before{
+      counter-increment:sec; content:counter(sec);
+      background:#1b2170 !important; color:#ffffff !important;
+      font-size:8.5pt; font-weight:700; width:18px; height:18px; border-radius:4px;
+      display:inline-flex; align-items:center; justify-content:center; flex:none;
+    }
 
-    /* keep each card whole; never let a page break cut through one */
-    .kpi, .chart-card, .summary-card, .ledger-card, .infobar{
-      border:1px solid #d1d5db !important; background:#fff !important; box-shadow:none !important;
-      break-inside:avoid; page-break-inside:avoid;
+    /* ---------- KPI strip ---------- */
+    .kpi-grid{ display:flex !important; flex-wrap:nowrap; gap:8px; margin:0 0 4px !important; break-inside:avoid; page-break-inside:avoid; }
+    .kpi{
+      flex:1 1 0; min-width:0; padding:10px 11px !important; border-radius:8px !important;
+      background:#fbfcfe !important; border:1px solid #d7dbe7 !important; border-top:3px solid #1b2170 !important;
+      box-shadow:none !important; break-inside:avoid;
     }
-    /* CSS Grid is unreliable in some browsers' print engines (renders blank) —
-       force flexbox/block layout for print instead of display:grid. */
-    .kpi-grid{
-      display:flex !important; flex-wrap:wrap; gap:10px; margin-bottom:14px;
-      break-inside:avoid; page-break-inside:avoid;
-    }
-    .kpi-grid .kpi{ flex:1 1 21%; min-width:120px; }
-    .charts-grid{
-      display:flex !important; flex-wrap:wrap; gap:14px; margin-bottom:14px;
-      break-inside:avoid; page-break-inside:avoid;
-    }
-    .charts-grid .chart-card{ flex:1 1 46%; min-width:220px; }
-    .summary-grid{ display:block !important; margin-bottom:14px; }
-    .infobar{ margin-bottom:14px; break-inside:avoid; page-break-inside:avoid; }
-    .kpi{ padding:12px; }
-    .kpi .num{ font-size:22px; }
-    .chart-card, .summary-card, .ledger-card{ padding:14px; }
+    .kpi.accent-orange{ border-top-color:#d9891a !important; }
+    .kpi.accent-green{ border-top-color:#0f7a3d !important; }
+    .kpi.accent-red{ border-top-color:#a10f28 !important; }
+    .kpi .lbl{ font-size:8pt !important; color:#5b6472 !important; margin-bottom:5px !important; }
+    .kpi .num{ font-size:19pt !important; font-weight:800; color:#111827 !important; }
+    .kpi .num.green{ color:#0f7a3d !important; }
+    .kpi .num.orange-t{ color:#9a6206 !important; }
+    .kpi .num.red{ color:#a10f28 !important; }
+    .kpi .num small{ font-size:9pt !important; color:#5b6472 !important; font-weight:700; }
+    .kpi .sub{ font-size:7.5pt !important; margin-top:5px !important; color:#5b6472 !important; }
+    .kpi .sub.green, .kpi .sub.orange-t, .kpi .sub.red{ color:#5b6472 !important; }
 
-    /* charts render at a fixed, modest size so pairs sit level */
-    #statusChart svg{ width:150px; height:150px; }
-    #deptChart svg{ width:100%; max-width:280px; height:auto; }
+    /* ---------- cards ---------- */
+    .chart-card, .summary-card, .ledger-card{
+      background:#ffffff !important; border:1px solid #d7dbe7 !important;
+      border-radius:8px !important; padding:13px !important; box-shadow:none !important;
+    }
+    .charts-grid{ display:flex !important; gap:10px; margin:0 0 4px !important; break-inside:avoid; page-break-inside:avoid; }
+    .charts-grid .chart-card{ flex:1 1 50%; min-width:0; break-inside:avoid; page-break-inside:avoid; }
+    .chart-card h3{
+      font-size:9.5pt !important; font-weight:700; color:#1b2170 !important;
+      margin:0 0 9px !important; padding-bottom:6px; border-bottom:1px solid #e6e9f2;
+    }
+    #statusChart svg{ width:132px !important; height:132px !important; }
+    #deptChart svg{ width:100% !important; max-width:265px; height:auto !important; }
     #deptChart svg text{ fill:#111827 !important; }
-    #deptChart svg line{ stroke:#d1d5db !important; }
-    .legend-row{ font-size:10.5px; gap:6px 12px; }
+    #deptChart svg line{ stroke:#c9cfe4 !important; }
+    .legend-row{ font-size:8pt !important; gap:5px 11px !important; color:#5b6472 !important; margin-top:9px !important; }
+    .legend-dot{ width:8px; height:8px; }
 
-    /* ledger table: allow the card to flow across pages, but repeat the header row and never split a row.
-       The title must never sit alone right before a page break — reinforced from both sides since
-       browsers (notably Edge) don't always honor a single break-after hint reliably. */
-    .ledger-card{ break-inside:auto; page-break-inside:auto; }
-    .ledger-head{ break-after:avoid; page-break-after:avoid; break-inside:avoid; page-break-inside:avoid; }
-    .table-wrap{ max-height:none; overflow:visible; break-before:avoid; page-break-before:avoid; }
-    table{ min-width:0; font-size:10.5px; break-before:avoid; page-break-before:avoid; }
-    thead{ display:table-header-group; break-after:avoid; page-break-after:avoid; break-inside:avoid; page-break-inside:avoid; }
+    /* ---------- executive summary ---------- */
+    .summary-grid{ display:block !important; margin:0 0 4px !important; }
+    .summary-card{ border-inline-start:3px solid #1b2170 !important; break-inside:avoid; page-break-inside:avoid; }
+    .summary-card p{
+      font-size:9.5pt !important; line-height:1.85 !important; color:#26303f !important;
+      text-align:justify; margin:0 !important;
+    }
+    .kw-chip{ background:#eef0f8 !important; border:1px solid #d7dbe7 !important; color:#1b2170 !important; }
+
+    /* ---------- job-order ledger (starts on its own page) ---------- */
+    .ledger-card{
+      break-before:page; page-break-before:always;
+      break-inside:auto; page-break-inside:auto;
+      border:none !important; padding:0 !important;
+    }
+    .ledger-head{ display:block !important; margin:0 0 8px !important; break-after:avoid; page-break-after:avoid; }
+    #printFilterNote{ font-size:8.5pt; color:#5b6472 !important; margin:0 0 7px; }
+    #emptyState{ padding:14px !important; font-size:9pt !important; color:#5b6472 !important;
+      border:1px solid #d7dbe7; border-radius:8px; }
+    .table-wrap{ max-height:none !important; overflow:visible !important; break-before:avoid; page-break-before:avoid; }
+
+    table{
+      min-width:0 !important; width:100%; font-size:8.5pt !important;
+      border:1px solid #d7dbe7; border-collapse:collapse;
+      break-before:avoid; page-break-before:avoid;
+    }
+    thead{ display:table-header-group; break-after:avoid; page-break-after:avoid; break-inside:avoid; }
+    thead th{
+      background:#1b2170 !important; color:#ffffff !important;
+      font-size:8pt !important; font-weight:700; letter-spacing:.2px; text-transform:none;
+      padding:7px 6px !important; border:none !important; border-inline-end:1px solid #3b4290 !important;
+    }
+    thead th:last-child{ border-inline-end:none !important; }
+    tbody td{
+      padding:5.5px 6px !important; vertical-align:top; color:#111827 !important;
+      border-bottom:1px solid #e6e9f2 !important; border-inline-end:1px solid #f0f2f8 !important;
+    }
+    tbody td:last-child{ border-inline-end:none !important; }
     tbody tr{ break-inside:avoid; page-break-inside:avoid; }
     tbody tr:first-child{ break-before:avoid; page-break-before:avoid; }
-    .pill, .dept-pill{ border:1px solid #d1d5db !important; }
-    .pill.ok{ background:#e6f7ec !important; color:#0f7a3d !important; }
-    .pill.still{ background:#fdf1dd !important; color:#8a5a10 !important; }
-    .pill.spr{ background:#fbe4e8 !important; color:#a10f28 !important; }
-    .dept-pill{ background:#f3f4f6 !important; color:#111827 !important; }
+    tbody tr:nth-child(even) td{ background:#f7f8fc !important; }
+    tbody tr:hover{ background:none !important; }
+    th:nth-child(1), td:nth-child(1){ width:5%; text-align:center; }
+    th:nth-child(2), td:nth-child(2){ width:11%; }
+    th:nth-child(3), td:nth-child(3){ width:17%; }
+    th:nth-child(4), td:nth-child(4){ width:33%; }
+    th:nth-child(5), td:nth-child(5){ width:12%; }
+    th:nth-child(6), td:nth-child(6){ width:22%; }
+
+    .pill{ font-size:7.5pt !important; font-weight:700; padding:2px 7px !important; border:1px solid transparent !important; }
+    .pill.ok{ background:#e6f7ec !important; color:#0f7a3d !important; border-color:#bde5cb !important; }
+    .pill.still{ background:#fdf1dd !important; color:#8a5a10 !important; border-color:#f0dab2 !important; }
+    .pill.spr{ background:#fbe4e8 !important; color:#a10f28 !important; border-color:#f3c4ce !important; }
+    .dept-pill{
+      background:#eef0f8 !important; color:#1b2170 !important;
+      border:1px solid #d7dbe7 !important; font-size:7.5pt !important; font-weight:600;
+    }
+
+    /* ---------- closing footer ----------
+       A position:fixed footer repeats on every page, but browsers place it
+       relative to the page box and it ends up painted ON TOP of the table rows
+       on continuation pages. It is laid out in the normal flow instead, so it
+       closes the document cleanly and can never collide with the content. */
+    #printFoot{
+      display:flex !important; align-items:center; justify-content:space-between; gap:10px;
+      margin-top:16px; padding-top:6px; border-top:1px solid #d7dbe7; background:#ffffff !important;
+      font-size:7.5pt; color:#5b6472 !important;
+      break-inside:avoid; page-break-inside:avoid; break-before:avoid; page-break-before:avoid;
+    }
+    #printFoot .pf-brand{ color:#1b2170 !important; font-weight:700; }
+    #printFoot .pf-right{ direction:ltr; }
   }
 
   /* ===== PWA install / update / offline UI ===== */
@@ -424,6 +528,33 @@
 
   <section id="reportSection">
 
+    <!-- ===== print-only document letterhead ===== -->
+    <div id="printHead" class="print-only">
+      <div class="ph-top">
+        <div class="ph-brand">
+          <div class="logo ph-logo"></div>
+          <div>
+            <div class="ph-org" data-i18n="orgName">ARABIAN MAINTENANCE OPERATION SERVICE</div>
+            <div class="ph-org2" data-i18n="orgNameLocal">شركة الخدمات العربية لعمليات الصيانة المحدودة</div>
+          </div>
+        </div>
+        <div class="ph-docid">
+          <div class="ph-doclbl" data-i18n="pmRef">رقم المرجع</div>
+          <div class="ph-docval" id="pmRef">-</div>
+        </div>
+      </div>
+      <div class="ph-title" id="pmTitle">-</div>
+      <div class="ph-sub" id="pmSub">-</div>
+      <div class="ph-meta">
+        <div><span data-i18n="pmBuilding">المبنى</span><b id="pmBuilding">-</b></div>
+        <div><span data-i18n="pmPeriod">فترة التقرير</span><b id="pmPeriod">-</b></div>
+        <div><span data-i18n="pmType">نوع التقرير</span><b id="pmType">-</b></div>
+        <div><span data-i18n="pmEngineer">مهندس المبنى</span><b id="pmEngineer">-</b></div>
+        <div><span data-i18n="pmSiteManager">مدير الموقع</span><b id="pmSiteManager">-</b></div>
+        <div><span data-i18n="pmIssued">تاريخ الإصدار</span><b id="pmIssued">-</b></div>
+      </div>
+    </div>
+
     <div class="infobar">
       <div class="info-item"><span class="ic">👷</span><div><div class="lbl" data-i18n="infoSiteManager">مدير الموقع</div><div class="val" id="infoSiteManager">-</div></div></div>
       <div class="info-item"><span class="ic">🛠️</span><div><div class="lbl" data-i18n="infoEngineer">مهندس المبنى</div><div class="val" id="infoEngineer">-</div></div></div>
@@ -431,6 +562,7 @@
       <div class="info-item"><span class="ic">✅</span><div><div class="lbl" data-i18n="infoTotalTickets">إجمالي طلبات الصيانة المسجلة</div><div class="val" id="infoTotalTickets">-</div></div></div>
     </div>
 
+    <h2 class="sec-title print-only" data-i18n="secKpi">مؤشرات الأداء الرئيسية</h2>
     <div class="kpi-grid">
       <div class="kpi accent-orange">
         <div class="lbl" data-i18n="kpiTotal">إجمالي طلبات الصيانة</div>
@@ -453,6 +585,7 @@
       </div>
     </div>
 
+    <h2 class="sec-title print-only" data-i18n="secCharts">التحليل البياني للأعمال</h2>
     <div class="charts-grid">
       <div class="chart-card">
         <h3 data-i18n="chartDeptTitle">توزيع الأعطال حسب القسم الهندسي</h3>
@@ -478,6 +611,7 @@
         <h3 data-i18n="ledgerTitle">سجل جميع طلبات الصيانة (منجزة / غير منجزة)</h3>
         <input class="search-box" id="searchBox" data-i18n-ph="searchPh" placeholder="ابحث بالموقع، القسم، وصف العطل...">
       </div>
+      <div id="printFilterNote" class="print-only"></div>
       <div class="tabs" id="tabsRow"></div>
       <div class="table-wrap">
         <table>
@@ -497,10 +631,36 @@
       </div>
     </div>
 
+    <!-- ===== print-only running footer ===== -->
+    <div id="printFoot" class="print-only">
+      <span class="pf-brand" data-i18n="orgName">ARABIAN MAINTENANCE OPERATION SERVICE</span>
+      <span data-i18n="footerNote">وثيقة داخلية — لا تُتداول خارج نطاق المشروع</span>
+      <span class="pf-right" id="pfRight"></span>
+    </div>
+
   </section>
 </div>
 
 </div>
+
+<div class="pwa-toast" id="pwaToast">
+  <div class="box">
+    <span id="pwaToastMsg" style="flex:1;">&nbsp;</span>
+    <button class="btn primary" id="pwaToastAction" style="padding:7px 12px;">&nbsp;</button>
+  </div>
+</div>
+
+<div class="pwa-modal" id="iosModal">
+  <div class="box">
+    <div class="logo" style="margin:0 auto 14px;">
+      
+    </div>
+    <h3 data-i18n="installIosTitle">تثبيت التطبيق على الآيفون / الآيباد</h3>
+    <p data-i18n="installIosBody">من شريط سفاري اضغطي على زر المشاركة ⬆️ ثم اختاري «إضافة إلى الشاشة الرئيسية».</p>
+    <button class="btn primary" id="iosModalClose" style="width:100%; justify-content:center;" data-i18n="installClose">إغلاق</button>
+  </div>
+</div>
+
 
 <script>
 const I18N = {
@@ -537,6 +697,19 @@ const I18N = {
     emptyState:"لا توجد نتائج مطابقة", tabAll:"الكل", tabOk:"منجزة", tabIncomplete:"غير مكتملة", tabUnder:"قيد الصيانة", tabSpr:"بانتظار القطع",
     fileChosen:"تم اختيار: ", noFile:"الرجاء اختيار ملف إكسل ثم الضغط على توليد التقرير",
     noHeader:"تعذر التعرف على أعمدة الملف. تأكدي من أن الملف يطابق تنسيق قالب التقرير الشهري.",
+    // --- printed document ---
+    orgNameLocal:"شركة الخدمات العربية لعمليات الصيانة المحدودة",
+    docTitleMonthly:"التقرير الشهري لأعمال الصيانة", docTitleWeekly:"التقرير الأسبوعي لأعمال الصيانة",
+    docSub:"كلية الملك عبدالله للبنات (مشروع الإمام) — جامعة الإمام محمد بن سعود الإسلامية",
+    pmRef:"رقم المرجع", pmBuilding:"المبنى", pmPeriod:"فترة التقرير", pmType:"نوع التقرير",
+    pmEngineer:"مهندس المبنى", pmSiteManager:"مدير الموقع", pmIssued:"تاريخ الإصدار",
+    secKpi:"مؤشرات الأداء الرئيسية", secCharts:"التحليل البياني للأعمال",
+    footerNote:"وثيقة داخلية — لا تُتداول خارج نطاق المشروع",
+    printFilterLbl:"التصنيف المعروض", printSearchLbl:"كلمة البحث",
+    printAllRecords:"يشمل السجل جميع طلبات الصيانة المسجلة خلال الفترة.",
+    exportDone:(f)=>`تم إنشاء الملف: ${f}`,
+    exportFallback:"إذا لم يبدأ التنزيل تلقائيًا، اضغطي هنا لفتح الملف",
+    exportFailed:"تعذّر حفظ الملف في هذا المتصفح. افتحي التطبيق في تبويب مستقل بدلًا من نافذة المعاينة ثم أعيدي المحاولة.",
   },
   en:{
     orgName:"ARABIAN MAINTENANCE OPERATION SERVICE",
@@ -571,6 +744,19 @@ const I18N = {
     emptyState:"No matching results", tabAll:"All", tabOk:"Completed", tabIncomplete:"Incomplete", tabUnder:"Under Maintenance", tabSpr:"Waiting Parts",
     fileChosen:"Selected: ", noFile:"Please choose an Excel file, then click Generate Report",
     noHeader:"Could not detect the file's columns. Make sure it matches the monthly report template format.",
+    // --- printed document ---
+    orgNameLocal:"Arabian Maintenance Operation Service Co. Ltd.",
+    docTitleMonthly:"Monthly Maintenance Works Report", docTitleWeekly:"Weekly Maintenance Works Report",
+    docSub:"King Abdullah Girls College (Imam Project) — Imam Mohammad Ibn Saud Islamic University",
+    pmRef:"Document Ref.", pmBuilding:"Building", pmPeriod:"Reporting Period", pmType:"Report Type",
+    pmEngineer:"Building Engineer", pmSiteManager:"Site Manager", pmIssued:"Issue Date",
+    secKpi:"Key Performance Indicators", secCharts:"Graphical Analysis",
+    footerNote:"Internal document — not for circulation outside the project",
+    printFilterLbl:"Applied filter", printSearchLbl:"Search term",
+    printAllRecords:"This log includes every maintenance request recorded during the period.",
+    exportDone:(f)=>`File ready: ${f}`,
+    exportFallback:"If the download did not start, click here to open the file",
+    exportFailed:"Could not save the file in this browser. Open the app in its own tab instead of the preview pane and try again.",
   }
 };
 // --- Simple access gate (client-side) ---
@@ -711,8 +897,62 @@ document.querySelectorAll('.lang-seg').forEach(btn=>{
   });
 });
 
+/* Fills every print-only field (letterhead, signatures, footer) right before
+   the browser paints the printed page, so the paper copy always matches the
+   data currently on screen. */
+function preparePrint(){
+  const dict = I18N[currentLang];
+  const type = document.getElementById('fType').value;
+  const typeLabel = type === 'weekly' ? dict.optWeekly : dict.optMonthly;
+  const bld = document.getElementById('fBuilding').value.trim();
+  const eng = document.getElementById('fEngineer').value.trim();
+  const sm  = document.getElementById('fSiteManager').value.trim() || 'AHMED ADEL';
+  const dash = '—';
+
+  const now = new Date();
+  const dateLocale = currentLang === 'ar' ? 'ar-EG-u-nu-latn' : 'en-GB';
+  const issued = now.toLocaleDateString(dateLocale, {year:'numeric', month:'long', day:'numeric'});
+
+  const mm = String(document.getElementById('fMonth').value || '').padStart(2,'0');
+  const yy = document.getElementById('fYear').value || '';
+  const wk = type === 'weekly' ? '-W' + (document.getElementById('fWeek').value || '') : '';
+  const ref = `AMOS/B${bld || '000'}/${yy}-${mm}${wk}`;
+
+  const docTitle = type === 'weekly' ? dict.docTitleWeekly : dict.docTitleMonthly;
+  const titleLine = currentLang === 'ar'
+    ? `${docTitle} — مبنى ${bld || dash}`
+    : `${docTitle} — Building ${bld || dash}`;
+
+  const set = (id, val)=>{ const el = document.getElementById(id); if(el) el.textContent = val; };
+  set('pmRef', ref);
+  set('pmTitle', titleLine);
+  set('pmSub', dict.docSub);
+  set('pmBuilding', bld || dash);
+  set('pmPeriod', getPeriodLabel() || dash);
+  set('pmType', typeLabel);
+  set('pmEngineer', eng || dash);
+  set('pmSiteManager', sm);
+  set('pmIssued', issued);
+  set('pfRight', `${ref} · ${now.toLocaleDateString('en-GB')}`);
+
+  // tell the reader exactly which slice of the ledger was printed
+  const noteEl = document.getElementById('printFilterNote');
+  if(noteEl){
+    const activeTab = document.querySelector('#tabsRow .tab.active');
+    const tabLabel = activeTab ? activeTab.textContent.replace(/\s+/g,' ').trim() : '';
+    const query = document.getElementById('searchBox').value.trim();
+    const parts = [];
+    if(filteredTab !== 'ALL' && tabLabel) parts.push(`${dict.printFilterLbl}: ${tabLabel}`);
+    if(query) parts.push(`${dict.printSearchLbl}: "${query}"`);
+    noteEl.textContent = parts.length ? parts.join('  |  ') : dict.printAllRecords;
+  }
+}
+
+window.addEventListener('beforeprint', preparePrint);
+
 document.getElementById('printBtn').addEventListener('click', ()=>{
   try{
+    preparePrint();
     window.print();
   }catch(err){
     console.error('Print failed:', err);
@@ -858,10 +1098,23 @@ function findHeaderAndParse(workbook){
   return null;
 }
 
-function showBanner(msg, type){
+function showBanner(msg, type, link){
   const el = document.getElementById('statusBanner');
   el.style.display = 'block';
   el.textContent = msg;
+  if(link && link.href){
+    el.appendChild(document.createTextNode(' '));
+    const a = document.createElement('a');
+    a.href = link.href;
+    a.textContent = link.text || link.href;
+    if(link.download) a.download = link.download;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.style.color = 'inherit';
+    a.style.fontWeight = '700';
+    a.style.textDecoration = 'underline';
+    el.appendChild(a);
+  }
   el.style.background = type === 'error' ? '#3a0f1a' : (type === 'success' ? '#0f2a1a' : '#1a2440');
   el.style.color = type === 'error' ? '#f43f5e' : (type === 'success' ? '#22c55e' : '#c9d2e3');
   el.style.border = '1px solid ' + (type === 'error' ? '#f43f5e' : (type === 'success' ? '#22c55e' : '#2a3a5c'));
@@ -1166,6 +1419,48 @@ function renderLedger(){
 
 document.getElementById('searchBox').addEventListener('input', renderLedger);
 
+/* Saving a Blob is surprisingly fragile across browsers:
+   - Firefox ignores a click on an anchor that is not in the DOM
+   - revoking the object URL immediately cancels the download in several engines
+   - sandboxed preview frames (Replit / embedded viewers) block downloads silently
+   So: keep the anchor in the document, revoke late, and always leave the user a
+   clickable link to open the file manually if nothing happened. */
+let lastBlobUrl = null;
+
+function saveFile(content, mime, filename){
+  const dict = I18N[currentLang];
+  try{
+    const blob = new Blob([content], {type:mime});
+
+    if(window.navigator && window.navigator.msSaveOrOpenBlob){
+      window.navigator.msSaveOrOpenBlob(blob, filename);
+      showBanner(dict.exportDone(filename), 'success');
+      return true;
+    }
+
+    if(lastBlobUrl){ URL.revokeObjectURL(lastBlobUrl); lastBlobUrl = null; }
+    const url = URL.createObjectURL(blob);
+    lastBlobUrl = url;
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{ if(a.parentNode) a.parentNode.removeChild(a); }, 3000);
+
+    showBanner(dict.exportDone(filename), 'success',
+      {href:url, text:dict.exportFallback, download:filename});
+    return true;
+  }catch(err){
+    console.error('Export failed:', err);
+    showBanner(dict.exportFailed, 'error');
+    return false;
+  }
+}
+
 document.getElementById('exportHtmlBtn').addEventListener('click', ()=>{
   if(!rawTickets.length){
     showBanner(currentLang==='ar'
@@ -1180,12 +1475,14 @@ document.getElementById('exportHtmlBtn').addEventListener('click', ()=>{
   // so the exported file works standalone with both languages built in.
   currentLang = 'ar';
   applyI18n();
+  preparePrint();
   const arBrand = document.querySelector('header.topbar .brand').outerHTML;
   const arReport = document.getElementById('reportSection').outerHTML;
   const arTitle = document.getElementById('subTitle').textContent.trim();
 
   currentLang = 'en';
   applyI18n();
+  preparePrint();
   const enBrand = document.querySelector('header.topbar .brand').outerHTML;
   const enReport = document.getElementById('reportSection').outerHTML;
   const enTitle = document.getElementById('subTitle').textContent.trim();
@@ -1193,6 +1490,7 @@ document.getElementById('exportHtmlBtn').addEventListener('click', ()=>{
   // Restore the app to whatever language/state the user was actually viewing.
   currentLang = originalLang;
   applyI18n();
+  preparePrint();
 
   const css = document.querySelector('style').textContent;
 
@@ -1241,14 +1539,8 @@ function showExportLang(lang){
 </body>
 </html>`;
 
-  const blob = new Blob([doc], {type:'text/html;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
   const bld = (document.getElementById('fBuilding').value || 'report').trim().replace(/\s+/g,'_');
-  a.download = `AMOS_Report_${bld}.html`;
-  a.click();
-  URL.revokeObjectURL(url);
+  saveFile(doc, 'text/html;charset=utf-8;', `AMOS_Report_${bld}.html`);
 });
 
 document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
@@ -1262,13 +1554,8 @@ document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
     rows.push(vals.join(','));
   });
   const csv = "\uFEFF" + rows.join('\n');
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'maintenance_report.csv';
-  a.click();
-  URL.revokeObjectURL(url);
+  const bld = (document.getElementById('fBuilding').value || 'report').trim().replace(/\s+/g,'_');
+  saveFile(csv, 'text/csv;charset=utf-8;', `AMOS_Report_${bld}.csv`);
 });
 
 // Also re-render live info fields as user types, once report is generated
@@ -1302,6 +1589,7 @@ applyI18n();
   let deferredPrompt = null;
 
   function showToast(msgKey, actionKey, onAction){
+    if(!toast || !toastMsg || !toastAction) return;
     toastMsg.textContent = T(msgKey);
     if(actionKey){
       toastAction.style.display = '';
@@ -1312,7 +1600,7 @@ applyI18n();
     }
     toast.classList.add('show');
   }
-  function hideToast(){ toast.classList.remove('show'); }
+  function hideToast(){ if(toast) toast.classList.remove('show'); }
 
   /* --- install button --- */
   function loginVisible(){
@@ -1322,22 +1610,23 @@ applyI18n();
   function offerInstallToast(){
     if(isStandalone) return;
     if(!loginVisible()) return;           // header button covers the logged-in case
+    if(!installBtn) return;
     showToast('installPrompt', 'installNow', ()=>{ hideToast(); installBtn.click(); });
   }
 
   window.addEventListener('beforeinstallprompt', (e)=>{
     e.preventDefault();
     deferredPrompt = e;
-    if(!isStandalone) installBtn.classList.add('show');
+    if(!isStandalone && installBtn) installBtn.classList.add('show');
     offerInstallToast();
   });
 
-  if(isIos && !isStandalone){
+  if(isIos && !isStandalone && installBtn){
     installBtn.classList.add('show');
     setTimeout(offerInstallToast, 1200);
   }
 
-  installBtn.addEventListener('click', async ()=>{
+  if(installBtn) installBtn.addEventListener('click', async ()=>{
     if(deferredPrompt){
       deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
@@ -1345,17 +1634,19 @@ applyI18n();
       if(choice && choice.outcome === 'accepted') installBtn.classList.remove('show');
       return;
     }
-    iosModal.classList.add('show');
+    if(iosModal) iosModal.classList.add('show');
   });
 
   const loginBtnEl = document.getElementById('loginBtn');
   if(loginBtnEl) loginBtnEl.addEventListener('click', ()=> setTimeout(()=>{ if(!loginVisible()) hideToast(); }, 50));
 
-  iosClose.addEventListener('click', ()=> iosModal.classList.remove('show'));
-  iosModal.addEventListener('click', (e)=>{ if(e.target === iosModal) iosModal.classList.remove('show'); });
+  if(iosClose && iosModal){
+    iosClose.addEventListener('click', ()=> iosModal.classList.remove('show'));
+    iosModal.addEventListener('click', (e)=>{ if(e.target === iosModal) iosModal.classList.remove('show'); });
+  }
 
   window.addEventListener('appinstalled', ()=>{
-    installBtn.classList.remove('show');
+    if(installBtn) installBtn.classList.remove('show');
     deferredPrompt = null;
   });
 
@@ -1391,22 +1682,5 @@ applyI18n();
 })();
 </script>
 
-<div class="pwa-toast" id="pwaToast">
-  <div class="box">
-    <span id="pwaToastMsg" style="flex:1;">&nbsp;</span>
-    <button class="btn primary" id="pwaToastAction" style="padding:7px 12px;">&nbsp;</button>
-  </div>
-</div>
-
-<div class="pwa-modal" id="iosModal">
-  <div class="box">
-    <div class="logo" style="margin:0 auto 14px;">
-      
-    </div>
-    <h3 data-i18n="installIosTitle">تثبيت التطبيق على الآيفون / الآيباد</h3>
-    <p data-i18n="installIosBody">من شريط سفاري اضغطي على زر المشاركة ⬆️ ثم اختاري «إضافة إلى الشاشة الرئيسية».</p>
-    <button class="btn primary" id="iosModalClose" style="width:100%; justify-content:center;" data-i18n="installClose">إغلاق</button>
-  </div>
-</div>
 </body>
 </html>
