@@ -14,6 +14,8 @@
 
 <title>AMOS | تقرير الصيانة</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{
     --bg:#0b1220;
@@ -63,7 +65,7 @@
   }
   h1{font-size:17px; margin:2px 0 2px;}
   header p{margin:0; font-size:12.5px; color:var(--sub);}
-  .actions{display:flex; gap:10px;}
+  .actions{display:flex; gap:10px; flex-wrap:wrap;}
   .btn{
     border:1px solid var(--border); background:#141f3a; color:var(--text);
     padding:9px 14px; border-radius:8px; font-size:13px; cursor:pointer;
@@ -463,6 +465,8 @@
       <button type="button" class="lang-seg" data-lang="en">EN</button>
       <button type="button" class="lang-seg" data-lang="ar">عربي</button>
     </div>
+    <button class="btn" id="exportXlsxBtn">📊 <span data-i18n="exportXlsx">تصدير Excel</span></button>
+    <button class="btn" id="exportPdfBtn">📄 <span data-i18n="exportPdf">تصدير PDF</span></button>
     <button class="btn" id="exportCsvBtn">⬇️ <span data-i18n="exportCsv">تصدير CSV</span></button>
     <button class="btn" id="exportHtmlBtn">🌐 <span data-i18n="exportHtml">تصدير HTML</span></button>
     <button class="btn primary" id="printBtn">🖨️ <span data-i18n="printBtn">طباعة التقرير</span></button>
@@ -495,13 +499,19 @@
         <select id="fType">
           <option value="weekly" data-i18n="optWeekly">أسبوعي</option>
           <option value="monthly" selected data-i18n="optMonthly">شهري</option>
+          <option value="semiannual" data-i18n="optSemiannual">نصف سنوي</option>
+          <option value="annual" data-i18n="optAnnual">سنوي</option>
         </select>
       </div>
       <div class="field" id="fWeekWrap" style="display:none;">
         <label data-i18n="fWeek">الأسبوع</label>
         <select id="fWeek"></select>
       </div>
-      <div class="field">
+      <div class="field" id="fHalfWrap" style="display:none;">
+        <label data-i18n="fHalf">النصف</label>
+        <select id="fHalf"></select>
+      </div>
+      <div class="field" id="fMonthWrap">
         <label data-i18n="fMonth">الشهر</label>
         <select id="fMonth"></select>
       </div>
@@ -634,7 +644,6 @@
     <!-- ===== print-only running footer ===== -->
     <div id="printFoot" class="print-only">
       <span class="pf-brand" data-i18n="orgName">ARABIAN MAINTENANCE OPERATION SERVICE</span>
-      <span data-i18n="footerNote">وثيقة داخلية — لا تُتداول خارج نطاق المشروع</span>
       <span class="pf-right" id="pfRight"></span>
     </div>
 
@@ -679,7 +688,8 @@ const I18N = {
     setupTitle:"إعداد التقرير",
     setupSub:"أدخلي بيانات المشرف والمبنى، ثم ارفعي ملف الإكسل بنفس تنسيق قالب التقرير الشهري.",
     fEngineer:"اسم مهندس المبنى", fBuilding:"رقم المبنى", fSiteManager:"مدير الموقع (اختياري)",
-    fType:"نوع التقرير", optWeekly:"أسبوعي", optMonthly:"شهري", fPeriod:"الفترة",
+    fType:"نوع التقرير", optWeekly:"أسبوعي", optMonthly:"شهري", optSemiannual:"نصف سنوي", optAnnual:"سنوي", fHalf:"النصف",
+    yearWord:"سنة", fPeriod:"الفترة",
     fWeek:"الأسبوع", fMonth:"الشهر", fYear:"السنة",
     fileStatusDefault:"لم يتم اختيار ملف بعد", generateBtn:"توليد التقرير",
     addFilesBtn:"إضافة ملفات", clearFilesBtn:"حذف الكل", removeFileLabel:"إزالة الملف",
@@ -692,7 +702,9 @@ const I18N = {
     chartDeptTitle:"توزيع الأعطال حسب القسم الهندسي", chartStatusTitle:"حالة الطلبات",
     summaryTitle:"الملخص التنفيذي",
     ledgerTitle:"سجل جميع طلبات الصيانة (منجزة / غير منجزة)",
-    searchPh:"ابحث بالموقع، القسم، وصف العطل...", exportCsv:"تصدير CSV", exportHtml:"تصدير HTML",
+    searchPh:"ابحث بالموقع، القسم، وصف العطل...", exportCsv:"تصدير CSV", exportXlsx:"تصدير Excel", exportPdf:"تصدير PDF",
+    pdfWorking:"جاري إنشاء ملف PDF...", pdfLibMissing:"تعذّر تحميل مكتبة PDF من الإنترنت. تأكدي من الاتصال ثم أعيدي تحميل الصفحة.",
+    needReport:"ولّدي التقرير أولًا قبل التصدير.", exportHtml:"تصدير HTML",
     colNo:"رقم", colDept:"القسم", colLocation:"الموقع", colComplaint:"وصف العطل", colStatus:"الحالة", colNote:"ملاحظة",
     emptyState:"لا توجد نتائج مطابقة", tabAll:"الكل", tabOk:"منجزة", tabIncomplete:"غير مكتملة", tabUnder:"قيد الصيانة", tabSpr:"بانتظار القطع",
     fileChosen:"تم اختيار: ", noFile:"الرجاء اختيار ملف إكسل ثم الضغط على توليد التقرير",
@@ -700,6 +712,7 @@ const I18N = {
     // --- printed document ---
     orgNameLocal:"شركة الخدمات العربية لعمليات الصيانة المحدودة",
     docTitleMonthly:"التقرير الشهري لأعمال الصيانة", docTitleWeekly:"التقرير الأسبوعي لأعمال الصيانة",
+    docTitleSemiannual:"التقرير النصف سنوي لأعمال الصيانة", docTitleAnnual:"التقرير السنوي لأعمال الصيانة",
     docSub:"كلية الملك عبدالله للبنات (مشروع الإمام) — جامعة الإمام محمد بن سعود الإسلامية",
     pmRef:"رقم المرجع", pmBuilding:"المبنى", pmPeriod:"فترة التقرير", pmType:"نوع التقرير",
     pmEngineer:"مهندس المبنى", pmSiteManager:"مدير الموقع", pmIssued:"تاريخ الإصدار",
@@ -726,7 +739,8 @@ const I18N = {
     setupTitle:"Report Setup",
     setupSub:"Enter the engineer and building details, then upload the Excel file matching the monthly report template format.",
     fEngineer:"Building Engineer Name", fBuilding:"Building Number", fSiteManager:"Site Manager (optional)",
-    fType:"Report Type", optWeekly:"Weekly", optMonthly:"Monthly", fPeriod:"Period",
+    fType:"Report Type", optWeekly:"Weekly", optMonthly:"Monthly", optSemiannual:"Semi-Annual", optAnnual:"Annual", fHalf:"Half",
+    yearWord:"Year", fPeriod:"Period",
     fWeek:"Week", fMonth:"Month", fYear:"Year",
     fileStatusDefault:"No file selected yet", generateBtn:"Generate Report",
     addFilesBtn:"Add Files", clearFilesBtn:"Clear All", removeFileLabel:"Remove file",
@@ -739,7 +753,9 @@ const I18N = {
     chartDeptTitle:"Engineering Faults Distribution", chartStatusTitle:"Work Order Status",
     summaryTitle:"Executive Summary",
     ledgerTitle:"All Maintenance Requests Log (Completed / Not Completed)",
-    searchPh:"Search by location, department, complaint...", exportCsv:"Export CSV", exportHtml:"Export HTML",
+    searchPh:"Search by location, department, complaint...", exportCsv:"Export CSV", exportXlsx:"Export Excel", exportPdf:"Export PDF",
+    pdfWorking:"Creating PDF file...", pdfLibMissing:"The PDF library failed to load from the internet. Check your connection and reload the page.",
+    needReport:"Generate the report first before exporting.", exportHtml:"Export HTML",
     colNo:"No.", colDept:"Dept", colLocation:"Location", colComplaint:"Complaint", colStatus:"Status", colNote:"Note",
     emptyState:"No matching results", tabAll:"All", tabOk:"Completed", tabIncomplete:"Incomplete", tabUnder:"Under Maintenance", tabSpr:"Waiting Parts",
     fileChosen:"Selected: ", noFile:"Please choose an Excel file, then click Generate Report",
@@ -747,6 +763,7 @@ const I18N = {
     // --- printed document ---
     orgNameLocal:"Arabian Maintenance Operation Service Co. Ltd.",
     docTitleMonthly:"Monthly Maintenance Works Report", docTitleWeekly:"Weekly Maintenance Works Report",
+    docTitleSemiannual:"Semi-Annual Maintenance Works Report", docTitleAnnual:"Annual Maintenance Works Report",
     docSub:"King Abdullah Girls College (Imam Project) — Imam Mohammad Ibn Saud Islamic University",
     pmRef:"Document Ref.", pmBuilding:"Building", pmPeriod:"Reporting Period", pmType:"Report Type",
     pmEngineer:"Building Engineer", pmSiteManager:"Site Manager", pmIssued:"Issue Date",
@@ -806,12 +823,29 @@ const WEEKS = {
   ar:['الأسبوع الأول','الأسبوع الثاني','الأسبوع الثالث','الأسبوع الرابع'],
   en:['Week 1','Week 2','Week 3','Week 4']
 };
+const HALVES = {
+  ar:['النصف الأول (يناير – يونيو)','النصف الثاني (يوليو – ديسمبر)'],
+  en:['First Half (Jan – Jun)','Second Half (Jul – Dec)']
+};
 const CURRENT_YEAR = new Date().getFullYear();
+
+function typeLabelOf(type){
+  const d = I18N[currentLang];
+  return ({weekly:d.optWeekly, monthly:d.optMonthly, semiannual:d.optSemiannual, annual:d.optAnnual})[type] || d.optMonthly;
+}
+function docTitleOf(type){
+  const d = I18N[currentLang];
+  return ({weekly:d.docTitleWeekly, monthly:d.docTitleMonthly, semiannual:d.docTitleSemiannual, annual:d.docTitleAnnual})[type] || d.docTitleMonthly;
+}
 
 function populateDateDropdowns(){
   const monthSel = document.getElementById('fMonth');
   const yearSel = document.getElementById('fYear');
   const weekSel = document.getElementById('fWeek');
+  const halfSel = document.getElementById('fHalf');
+  const prevHalf = halfSel.value || (new Date().getMonth() < 6 ? '1' : '2');
+  halfSel.innerHTML = HALVES[currentLang].map((h,i)=>`<option value="${i+1}">${h}</option>`).join('');
+  halfSel.value = prevHalf;
 
   const prevMonth = monthSel.value, prevYear = yearSel.value, prevWeek = weekSel.value;
 
@@ -833,6 +867,8 @@ function populateDateDropdowns(){
 function toggleWeekVisibility(){
   const type = document.getElementById('fType').value;
   document.getElementById('fWeekWrap').style.display = type === 'weekly' ? 'block' : 'none';
+  document.getElementById('fHalfWrap').style.display = type === 'semiannual' ? 'block' : 'none';
+  document.getElementById('fMonthWrap').style.display = (type === 'semiannual' || type === 'annual') ? 'none' : 'block';
 }
 
 function getPeriodLabel(){
@@ -842,6 +878,13 @@ function getPeriodLabel(){
   if(type === 'weekly'){
     const week = WEEKS[currentLang][parseInt(document.getElementById('fWeek').value,10)-1] || '';
     return `${week} — ${month} ${year}`;
+  }
+  if(type === 'semiannual'){
+    const half = HALVES[currentLang][parseInt(document.getElementById('fHalf').value,10)-1] || '';
+    return `${half} ${year}`;
+  }
+  if(type === 'annual'){
+    return `${I18N[currentLang].yearWord} ${year}`;
   }
   return `${month} ${year}`;
 }
@@ -903,7 +946,7 @@ document.querySelectorAll('.lang-seg').forEach(btn=>{
 function preparePrint(){
   const dict = I18N[currentLang];
   const type = document.getElementById('fType').value;
-  const typeLabel = type === 'weekly' ? dict.optWeekly : dict.optMonthly;
+  const typeLabel = typeLabelOf(type);
   const bld = document.getElementById('fBuilding').value.trim();
   const eng = document.getElementById('fEngineer').value.trim();
   const sm  = document.getElementById('fSiteManager').value.trim() || 'AHMED ADEL';
@@ -916,9 +959,11 @@ function preparePrint(){
   const mm = String(document.getElementById('fMonth').value || '').padStart(2,'0');
   const yy = document.getElementById('fYear').value || '';
   const wk = type === 'weekly' ? '-W' + (document.getElementById('fWeek').value || '') : '';
-  const ref = `AMOS/B${bld || '000'}/${yy}-${mm}${wk}`;
+  let ref = `AMOS/B${bld || '000'}/${yy}-${mm}${wk}`;
+  if(type === 'semiannual') ref = `AMOS/B${bld || '000'}/${yy}-H${document.getElementById('fHalf').value || '1'}`;
+  if(type === 'annual')     ref = `AMOS/B${bld || '000'}/${yy}-Y`;
 
-  const docTitle = type === 'weekly' ? dict.docTitleWeekly : dict.docTitleMonthly;
+  const docTitle = docTitleOf(type);
   const titleLine = currentLang === 'ar'
     ? `${docTitle} — مبنى ${bld || dash}`
     : `${docTitle} — Building ${bld || dash}`;
@@ -1015,6 +1060,10 @@ document.getElementById('clearFilesBtn').addEventListener('click', ()=>{
   renderFileList();
 });
 
+function isSpr(t){
+  return (t.note||'').toUpperCase().replace(/[^A-Z]/g,'').includes('SPR');
+}
+
 function normDept(raw){
   if(!raw) return 'OTHER';
   const v = raw.toString().trim().toUpperCase();
@@ -1027,27 +1076,40 @@ function normDept(raw){
   return 'OTHER';
 }
 
+function fmtExcelDate(v){
+  if(v === null || v === undefined || v === '') return '';
+  if(typeof v === 'number'){
+    try{ return XLSX.SSF.format('yyyy-mm-dd hh:mm', v); }catch(e){ return String(v); }
+  }
+  return v.toString().trim();
+}
+
 function findHeaderAndParse(workbook){
   // Scan every sheet, not just the first — some workbooks put the ticket table on a later tab.
   for(const sheetName of workbook.SheetNames){
     const ws = workbook.Sheets[sheetName];
     const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:null});
 
-    let headerIdx = -1, col = {no:-1, dept:-1, location:-1, complaint:-1, status:-1, note:-1};
+    let headerIdx = -1, col = {no:-1, dept:-1, location:-1, complaint:-1, status:-1, note:-1, building:-1, date:-1};
     for(let i=0;i<rows.length;i++){
       const row = rows[i];
       if(!row) continue;
       let hits = 0;
-      const localCol = {no:-1, dept:-1, location:-1, complaint:-1, status:-1, note:-1};
+      const localCol = {no:-1, dept:-1, location:-1, complaint:-1, status:-1, note:-1, building:-1, date:-1, complaintCols:[]};
       row.forEach((cell, idx)=>{
         if(cell === null || cell === undefined) return;
         const t = cell.toString().trim().toLowerCase();
-        if(/no\s*\.?\s*j\.?\s*o/.test(t) || t === 'no' || t === 'no.'){ localCol.no = idx; hits++; }
-        else if(t.startsWith('part')){ localCol.dept = idx; hits++; }
-        else if(t.includes('location')){ localCol.location = idx; hits++; }
-        else if(t.includes('complaint') && !t.includes('location')){ localCol.complaint = idx; hits++; }
-        else if(t.includes('status')){ localCol.status = idx; hits++; }
-        else if(t.includes('note')){ localCol.note = idx; hits++; }
+        if(/no\s*\.?\s*j\.?\s*o/.test(t) || t === 'no' || t === 'no.' || t === 'رقم' || t === 'م'){ localCol.no = idx; hits++; }
+        else if(t.startsWith('part') || /^(dept|department|trade)\b/.test(t) || t === 'القسم' || t === 'التخصص'){ localCol.dept = idx; hits++; }
+        else if(t.includes('location') || t === 'room' || t.includes('الموقع') || t.includes('المكان')){ localCol.location = idx; hits++; }
+        else if(/complaint|description|\bdesc\b|fault|problem|issue|detail|الشكو|الشكاو|وصف|العطل|البلاغ/.test(t)){
+          localCol.complaintCols.push(idx);
+          if(localCol.complaint < 0){ localCol.complaint = idx; hits++; }
+        }
+        else if(t.includes('status') || t.includes('الحالة')){ localCol.status = idx; hits++; }
+        else if(t.includes('note') || t.includes('remark') || t.includes('ملاحظ')){ localCol.note = idx; hits++; }
+        else if(t.includes('building')){ localCol.building = idx; }
+        else if(t.includes('date') || t.includes('time')){ localCol.date = idx; }
       });
       // Need at minimum a department column and a status column to trust this as the header row.
       if(localCol.dept >= 0 && localCol.status >= 0 && hits >= 2){
@@ -1055,6 +1117,30 @@ function findHeaderAndParse(workbook){
       }
     }
     if(headerIdx === -1) continue; // try next sheet
+
+    // No complaint header recognised: use the unassigned column holding the longest text.
+    if(!col.complaintCols.length){
+      const used = new Set([col.no,col.dept,col.location,col.status,col.note,col.building,col.date]);
+      const sample = rows.slice(headerIdx+1, headerIdx+201).filter(Boolean);
+      let best = -1, bestLen = 0;
+      const width = Math.max(0, ...sample.map(r=>r.length));
+      for(let c=0;c<width;c++){
+        if(used.has(c)) continue;
+        const vals = sample.map(r=>r[c]).filter(v=>v!==null && v!==undefined && typeof v !== 'number' && v.toString().trim());
+        if(vals.length < sample.length*0.3) continue;
+        const avg = vals.reduce((n,v)=>n+v.toString().trim().length,0)/vals.length;
+        if(avg > bestLen){ bestLen = avg; best = c; }
+      }
+      if(best >= 0 && bestLen >= 6){ col.complaint = best; col.complaintCols = [best]; }
+    }
+    // Several complaint columns (e.g. Arabic + English): take the first filled one per row.
+    const pickComplaint = row=>{
+      for(const c of col.complaintCols){
+        const v = row[c];
+        if(v !== null && v !== undefined && v.toString().trim()) return v.toString().trim();
+      }
+      return '';
+    };
 
     const tickets = [];
     let counter = 0;
@@ -1088,9 +1174,12 @@ function findHeaderAndParse(workbook){
         deptRaw: deptText,
         dept: normDept(deptRaw),
         location: col.location>=0 && row[col.location] ? row[col.location].toString().trim() : '',
-        complaint: col.complaint>=0 && row[col.complaint] ? row[col.complaint].toString().trim() : '',
+        complaint: pickComplaint(row),
         status: status === 'OK' ? 'OK' : (status === 'STILL' ? 'STILL' : (status || 'OTHER')),
-        note: col.note>=0 && row[col.note] ? row[col.note].toString().trim() : ''
+        note: col.note>=0 && row[col.note] ? row[col.note].toString().trim() : '',
+        statusRaw: status,
+        building: col.building>=0 && row[col.building] !== null && row[col.building] !== undefined ? row[col.building].toString().trim() : '',
+        date: col.date>=0 ? fmtExcelDate(row[col.date]) : ''
       });
     }
     if(tickets.length > 0) return tickets;
@@ -1207,7 +1296,7 @@ function renderInfobar(){
   document.getElementById('infoSiteManager').textContent = sm || '-';
   document.getElementById('infoEngineer').textContent = eng || '-';
   document.getElementById('infoTotalTickets').textContent = rawTickets.length;
-  const typeLabel = type === 'weekly' ? dict.optWeekly : dict.optMonthly;
+  const typeLabel = typeLabelOf(type);
   document.getElementById('infoPeriod').textContent = (period ? period + ' — ' : '') + typeLabel;
 
   document.getElementById('subTitle').textContent = currentLang==='ar'
@@ -1219,7 +1308,7 @@ function renderKpis(){
   const total = rawTickets.length;
   const ok = rawTickets.filter(t=>t.status==='OK').length;
   const still = rawTickets.filter(t=>t.status==='STILL').length;
-  const spr = rawTickets.filter(t=>t.status==='STILL' && t.note.toUpperCase().includes('SPR')).length;
+  const spr = rawTickets.filter(t=>t.status==='STILL' && isSpr(t)).length;
   const pct = (n)=> total ? ((n/total)*100).toFixed(1)+'%' : '0%';
 
   document.getElementById('kpiTotal').textContent = total;
@@ -1289,7 +1378,7 @@ function renderCharts(){
 
   // status breakdown
   const ok = rawTickets.filter(t=>t.status==='OK').length;
-  const spr = rawTickets.filter(t=>t.status==='STILL' && t.note.toUpperCase().includes('SPR')).length;
+  const spr = rawTickets.filter(t=>t.status==='STILL' && isSpr(t)).length;
   const under = rawTickets.filter(t=>t.status==='STILL').length - spr;
   const statusLabels = currentLang==='ar' ? ['مكتمل','قيد الصيانة','بانتظار قطع الغيار'] : ['Completed','Under Maintenance','Awaiting Parts'];
   const statusData = [ok, under, spr];
@@ -1307,7 +1396,7 @@ function renderSummary(){
   const total = rawTickets.length;
   const ok = rawTickets.filter(t=>t.status==='OK').length;
   const still = rawTickets.filter(t=>t.status==='STILL').length;
-  const spr = rawTickets.filter(t=>t.status==='STILL' && t.note.toUpperCase().includes('SPR')).length;
+  const spr = rawTickets.filter(t=>t.status==='STILL' && isSpr(t)).length;
   const okPct = total ? ((ok/total)*100).toFixed(1) : 0;
   const stillPct = total ? ((still/total)*100).toFixed(1) : 0;
 
@@ -1336,7 +1425,7 @@ function renderSummary(){
 function renderTabs(){
   const dict = I18N[currentLang];
   const okCount = rawTickets.filter(t=>t.status==='OK').length;
-  const sprCount = rawTickets.filter(t=>t.status==='STILL' && t.note.toUpperCase().includes('SPR')).length;
+  const sprCount = rawTickets.filter(t=>t.status==='STILL' && isSpr(t)).length;
   const underCount = rawTickets.filter(t=>t.status==='STILL').length - sprCount;
 
   const deptCounts = {};
@@ -1376,9 +1465,9 @@ function getFilteredTickets(){
   } else if(filteredTab === 'INCOMPLETE'){
     list = list.filter(t=>t.status==='STILL');
   } else if(filteredTab === 'UNDER'){
-    list = list.filter(t=>t.status==='STILL' && !t.note.toUpperCase().includes('SPR'));
+    list = list.filter(t=>t.status==='STILL' && !isSpr(t));
   } else if(filteredTab === 'SPR'){
-    list = list.filter(t=>t.status==='STILL' && t.note.toUpperCase().includes('SPR'));
+    list = list.filter(t=>t.status==='STILL' && isSpr(t));
   }
   const q = document.getElementById('searchBox').value.trim().toLowerCase();
   if(q){
@@ -1402,10 +1491,10 @@ function renderLedger(){
   }
   empty.style.display = 'none';
   body.innerHTML = list.map(t=>{
-    const isSpr = t.status==='STILL' && t.note.toUpperCase().includes('SPR');
+    const sprRow = t.status==='STILL' && isSpr(t);
     const isOk = t.status === 'OK';
-    const pillClass = isOk ? 'ok' : (isSpr ? 'spr' : 'still');
-    const statusLabel = isOk ? I18N[currentLang].tabOk : (isSpr ? I18N[currentLang].tabSpr : I18N[currentLang].tabUnder);
+    const pillClass = isOk ? 'ok' : (sprRow ? 'spr' : 'still');
+    const statusLabel = isOk ? I18N[currentLang].tabOk : (sprRow ? I18N[currentLang].tabSpr : I18N[currentLang].tabUnder);
     return `<tr>
       <td>${t.no}</td>
       <td><span class="dept-pill">${DEPT_META[t.dept] ? DEPT_META[t.dept][currentLang] : t.deptRaw}</span></td>
@@ -1558,9 +1647,222 @@ document.getElementById('exportCsvBtn').addEventListener('click', ()=>{
   saveFile(csv, 'text/csv;charset=utf-8;', `AMOS_Report_${bld}.csv`);
 });
 
+/* ---------- Excel export: same layout as the job-orders template ----------
+   Sheet "Tickets", 8 columns in the template's order and widths, raw codes
+   (ELECT / OK / STILL) so the file can be uploaded back into this app. */
+document.getElementById('exportXlsxBtn').addEventListener('click', ()=>{
+  const dict = I18N[currentLang];
+  if(!rawTickets.length){ showBanner(dict.needReport, 'error'); return; }
+  if(typeof XLSX === 'undefined'){ showBanner(dict.noHeader, 'error'); return; }
+
+  const formBld = document.getElementById('fBuilding').value.trim();
+  const header = ['NO J.O','part.','Complaints location','Complaints','Order status','NOTE','Building','Date/Time'];
+  const rows = getFilteredTickets().map(t=>[
+    t.no,
+    t.deptRaw || t.dept,
+    t.location || '',
+    t.complaint || '',
+    t.statusRaw || t.status,
+    t.note || '',
+    t.building || formBld,
+    t.date || ''
+  ]);
+  const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws['!cols'] = [8.83,10.83,16.83,36.83,14.83,20.83,10.83,18.83].map(w=>({width:w}));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Tickets');
+  const out = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+
+  const d = new Date();
+  const stamp = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  saveFile(out, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', `amos-job-orders-${stamp}.xlsx`);
+});
+
+/* ---------- PDF export ----------
+   Re-uses the @media print rules (letterhead, numbered sections, ledger) by
+   copying them under a .pdf-mode scope, so the PDF always matches the
+   printed report. Letter-spacing is forced off: it breaks Arabic joining
+   when the page is rasterised. */
+let pdfCssInjected = false;
+function injectPdfCss(){
+  if(pdfCssInjected) return;
+  const out = [];
+  const scope = sel => {
+    sel = sel.trim();
+    if(sel === 'html' || sel === 'body') return '.pdf-mode';
+    if(sel === '*') return '.pdf-mode, .pdf-mode *';
+    return '.pdf-mode ' + sel;
+  };
+  for(const sheet of document.styleSheets){
+    let rules; try{ rules = sheet.cssRules; }catch(e){ continue; }
+    for(const r of rules){
+      if(r.type === CSSRule.MEDIA_RULE && /print/.test(r.conditionText || r.media.mediaText)){
+        for(const inner of r.cssRules){
+          if(inner.type !== CSSRule.STYLE_RULE) continue;
+          out.push(inner.selectorText.split(',').map(scope).join(', ') + '{' + inner.style.cssText + '}');
+        }
+      }
+    }
+  }
+  out.push(`.pdf-mode{ background:#ffffff; color:#111827; padding:0; width:100%; }
+    .pdf-mode, .pdf-mode *{ letter-spacing:0 !important; }
+    .pdf-mode #reportSection{ display:block !important; }`);
+  const st = document.createElement('style');
+  st.id = 'pdfModeCss';
+  st.textContent = out.join('\n');
+  document.head.appendChild(st);
+  pdfCssInjected = true;
+}
+
+/* A4 portrait, 10mm side / 12mm top-bottom margins. The report is laid out at
+   the printable width in CSS px, captured once with the browser's own text
+   engine (correct Arabic shaping and mixed Arabic/English order), then cut into
+   pages at safe points: never through a table row or a card, the job-order log
+   always starts a new page, and the table header repeats on every page. */
+const PDF_PAGE = {w:210, h:297, mx:10, my:12};
+const PDF_CSS_W = 720; // layout width in CSS px
+
+document.getElementById('exportPdfBtn').addEventListener('click', async ()=>{
+  const dict = I18N[currentLang];
+  if(!rawTickets.length){ showBanner(dict.needReport, 'error'); return; }
+  if(typeof html2canvas === 'undefined' || !window.jspdf){ showBanner(dict.pdfLibMissing, 'error'); return; }
+
+  const btn = document.getElementById('exportPdfBtn');
+  btn.disabled = true;
+  showBanner(dict.pdfWorking, 'info');
+
+  const host = document.createElement('div');
+  host.style.cssText = 'position:absolute; left:0; top:0; z-index:-1; width:'+PDF_CSS_W+'px; background:#fff; pointer-events:none;';
+  const prevScroll = [window.scrollX, window.scrollY];
+  // an RTL host page shifts the capture origin; the report copy keeps its own dir
+  const prevDir = document.documentElement.dir;
+  try{
+    preparePrint();
+    injectPdfCss();
+
+    const wrap = document.createElement('div');
+    wrap.className = 'pdf-mode';
+    wrap.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+    wrap.lang = currentLang;
+    wrap.style.width = PDF_CSS_W + 'px';
+    const clone = document.getElementById('reportSection').cloneNode(true);
+    wrap.appendChild(clone);
+    host.appendChild(wrap);
+    document.body.appendChild(host);
+    document.getElementById('reportSection').id = 'reportSectionLive';   // keep ids unique while the copy exists
+
+    clone.querySelectorAll('#deptChart svg, #statusChart svg').forEach(svg=>{
+      const vb = (svg.getAttribute('viewBox')||'').split(/\s+/).map(Number);
+      const isDonut = !!svg.closest('#statusChart');
+      const w = isDonut ? 132 : 265;
+      const h = (vb.length === 4 && vb[2]) ? Math.round(w * vb[3] / vb[2]) : w;
+      svg.setAttribute('width', w); svg.setAttribute('height', h);
+      svg.style.cssText = `width:${w}px !important; height:${h}px !important; max-width:none !important; display:block; margin:0 auto; direction:ltr;`;
+      svg.querySelectorAll('text').forEach(tx=>{ tx.style.fill = '#111827'; });
+      svg.querySelectorAll('line').forEach(ln=>{ ln.style.stroke = '#c9cfe4'; });
+    });
+    // the ledger's page break is applied by the slicer, not by CSS
+    const ledger = clone.querySelector('.ledger-card');
+    if(ledger){ ledger.style.breakBefore = 'auto'; ledger.style.pageBreakBefore = 'auto'; ledger.style.marginTop = '0'; }
+
+    document.documentElement.dir = 'ltr';
+    window.scrollTo(0,0);
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    // --- measure safe cut points (CSS px, relative to the wrapper) ---
+    const base = wrap.getBoundingClientRect();
+    const rel = el => { const r = el.getBoundingClientRect(); return {top:r.top-base.top, bottom:r.bottom-base.top}; };
+    const atoms = Array.from(wrap.querySelectorAll(
+      '#printHead, .sec-title, .kpi-grid, .charts-grid, .summary-card, .ledger-head, #printFilterNote, tbody tr, #emptyState, #printFoot'
+    )).filter(el=>el.offsetParent !== null).map(rel);
+    const forced = ledger ? [rel(ledger).top] : [];
+    const thead = wrap.querySelector('thead');
+    const tbody = wrap.querySelector('tbody');
+    const theadBox = thead ? rel(thead) : null;
+    const tbodyBox = tbody && tbody.rows.length ? rel(tbody) : null;
+    const totalH = wrap.scrollHeight;
+
+    // --- capture ---
+    const scale = 2;
+    const canvas = await html2canvas(wrap, {
+      scale, backgroundColor:'#ffffff', useCORS:true, foreignObjectRendering:true,
+      width:PDF_CSS_W, height:totalH, x:0, y:0, scrollX:0, scrollY:0
+    });
+
+    // --- slice into pages ---
+    const contentWmm = PDF_PAGE.w - 2*PDF_PAGE.mx;
+    const contentHmm = PDF_PAGE.h - 2*PDF_PAGE.my;
+    const pxPerMm = PDF_CSS_W / contentWmm;
+    const pageHpx = contentHmm * pxPerMm;
+    const headH = theadBox ? (theadBox.bottom - theadBox.top) : 0;
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({unit:'mm', format:'a4', orientation:'portrait', compress:true});
+
+    const drawSlice = (fromPx, toPx, atMm)=>{
+      const sy = Math.round(fromPx*scale), sh = Math.max(1, Math.round((toPx-fromPx)*scale));
+      const c = document.createElement('canvas');
+      c.width = canvas.width; c.height = sh;
+      const g = c.getContext('2d');
+      g.fillStyle = '#ffffff'; g.fillRect(0,0,c.width,c.height);
+      g.drawImage(canvas, 0, sy, canvas.width, sh, 0, 0, canvas.width, sh);
+      pdf.addImage(c.toDataURL('image/jpeg', 0.95), 'JPEG', PDF_PAGE.mx, atMm, contentWmm, (toPx-fromPx)/pxPerMm, undefined, 'FAST');
+    };
+
+    let y = 0, first = true, pageNo = 0;
+    const pages = [];
+    while(y < totalH - 1){
+      const inTable = tbodyBox && y >= tbodyBox.top - 1 && y < tbodyBox.bottom - 1;
+      const repeatHead = inTable && !first && headH > 0 && y > theadBox.bottom;
+      const avail = pageHpx - (repeatHead ? headH : 0);
+      let cut = Math.min(y + avail, totalH);
+      // a forced break inside this page ends it early
+      for(const f of forced){ if(f > y + 1 && f < cut) cut = f; }
+      // never cut through an atomic block
+      if(cut < totalH){
+        for(const a of atoms){
+          if(a.top < cut && a.bottom > cut && a.top > y + 1){ cut = Math.min(cut, a.top); }
+        }
+      }
+      if(cut <= y + 1) cut = Math.min(y + avail, totalH); // block taller than a page: hard cut
+      pages.push({from:y, to:cut, repeatHead});
+      y = cut; first = false;
+      // skip blank space at the top of the next page
+      while(y < totalH && !atoms.some(a=>a.bottom > y && a.top <= y + 2) && atoms.some(a=>a.top > y)){
+        const next = Math.min(...atoms.filter(a=>a.top > y).map(a=>a.top));
+        if(next - y > 40) break; y = next;
+      }
+    }
+
+    pages.forEach((pg, i)=>{
+      if(i) pdf.addPage();
+      let at = PDF_PAGE.my;
+      if(pg.repeatHead){ drawSlice(theadBox.top, theadBox.bottom, at); at += headH/pxPerMm; }
+      drawSlice(pg.from, pg.to, at);
+      pdf.setFontSize(8); pdf.setTextColor(120);
+      pdf.text(`${i+1} / ${pages.length}`, PDF_PAGE.w/2, PDF_PAGE.h - 5, {align:'center'});
+    });
+
+    const bld = (document.getElementById('fBuilding').value || 'report').trim().replace(/\s+/g,'_');
+    const period = getPeriodLabel().replace(/[\\/:*?"<>|—–()]+/g,'').trim().replace(/\s+/g,'_');
+    const filename = `AMOS_Report_${bld}${period ? '_' + period : ''}.pdf`;
+    saveFile(pdf.output('blob'), 'application/pdf', filename);
+  }catch(err){
+    console.error('PDF export failed:', err);
+    showBanner(dict.exportFailed, 'error');
+  }finally{
+    const live = document.getElementById('reportSectionLive');
+    if(live) live.id = 'reportSection';
+    if(host.parentNode) host.parentNode.removeChild(host);
+    document.documentElement.dir = prevDir;
+    window.scrollTo(prevScroll[0], prevScroll[1]);
+    btn.disabled = false;
+  }
+});
+
 // Also re-render live info fields as user types, once report is generated
-['fEngineer','fBuilding','fSiteManager','fMonth','fYear','fWeek'].forEach(id=>{
-  document.getElementById(id).addEventListener('input', ()=>{
+['fEngineer','fBuilding','fSiteManager','fMonth','fYear','fWeek','fHalf'].forEach(id=>{
+  document.getElementById(id).addEventListener(id.startsWith('f') && document.getElementById(id).tagName==='SELECT' ? 'change' : 'input', ()=>{
     if(rawTickets.length){ renderInfobar(); renderSummary(); }
   });
 });
